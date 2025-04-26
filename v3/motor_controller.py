@@ -43,6 +43,9 @@ class VESCMotorController(MotorController):
     def get_measurements(self):
         return self.motor.get_measurements()
     
+    def set_duty_cycle(self, duty_cycle: float):
+        self.motor.set_duty_cycle(duty_cycle)    
+    
     def get_rpm(self):
         return self.motor.get_rpm()
 
@@ -68,6 +71,9 @@ class CanVESC(MotorController):
         current = self.speed_to_current(speed)
         packet = encode(SetCurrent(current, can_id=self.can_id))
         self.parent_vesc.write(packet)
+
+    def set_duty_cycle(self, duty_cycle: float):
+        self.motor.set_duty_cycle(duty_cycle)
 
     def get_measurements(self):
         return self.parent_vesc.write(self._get_values_msg, num_read_bytes=self._get_values_msg_expected_length)

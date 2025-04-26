@@ -16,10 +16,19 @@ class ScreenUI:
         self.center_line.place(x=398, y=0)
         
         # Large text box in the top right half with the text "69"
-        self.text_box = tk.Text(root, wrap=tk.WORD, font=('Helvetica', 100), bg='white', fg='black', bd=0, highlightthickness=0)
-        self.text_box.place(x=0, y=0, width=398, height=240)
+        self.text_box = tk.Text(root, wrap=tk.WORD, font=('Helvetica', 69), bg='white', fg='black', bd=0, highlightthickness=0)
+        self.text_box.place(x=0, y=30, width=398, height=100)
         self.text_box.tag_configure("center", justify='center')
-        self.text_box.insert(tk.END, "69\n", "center")
+        self.text_box.insert(tk.END, "69\n", "center")      
+
+        #Add four text boxes at the top of the screen
+        labels_text = ["P/N", "Chill", "Speed", "Ludicrous"]
+        self.labels_container = [[] for _ in range(len(labels_text))]
+        for i, text in enumerate(labels_text):
+            self.labels_container[i] = tk.Text(root, wrap=tk.WORD, font=('Helvetica', 18), bg='white', fg='black', bd=0, highlightthickness=0)
+            self.labels_container[i].tag_configure("center", justify='center')
+            self.labels_container[i].insert(tk.END, text, "center")
+            self.labels_container[i].place(x= i*96 + 4, y=10, width=96, height=20)                
         
         # Small text "MPH" under "69"
         self.mph_label = tk.Label(root, text="MPH", font=('Helvetica', 20), bg='white', fg='black')
@@ -52,7 +61,7 @@ class ScreenUI:
         self.debug_info = tk.Label(root, text="Debug info", font=('Helvetica', 20), bg='white', fg='black')
         self.debug_info.place(x=400, y=40)
 
-    def update_ui(self, speed, odo, left_power, right_power, debug_info): 
+    def update_ui(self, speed, odo, left_power, right_power, debug_info, drive_mode): 
         # Generate random values for demonstration
         self.text_box.delete("1.0", tk.END)
         self.text_box.insert(tk.END, str(speed) + "\n", "center")
@@ -61,6 +70,15 @@ class ScreenUI:
         self.right_power_green.place(height=right_power, y = 260 - right_power)
 
         self.odo_label.config(text="ODO: " + str(odo) + " miles")
+
+        drive_mode = drive_mode - 1
+        if drive_mode < 0:
+            drive_mode = 0
+
+        for i in range(len(self.labels_container)):
+            self.labels_container[i].config(fg='grey', font=('Helvetica', 18, 'normal'))
+
+        self.labels_container[drive_mode].config(fg='black', font=('Helvetica', 18, 'bold'))
 
         self.debug_info.config(text=debug_info)
 
