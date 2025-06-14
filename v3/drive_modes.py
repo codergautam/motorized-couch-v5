@@ -3,9 +3,13 @@ from typing import Tuple
 import mathutils
 import Gamepad.Controllers as Controllers
 
-SLOW_SPEED = 1
-MEDIUM_SPEED = 1
-MAX_SPEED = 1
+SPEED_MODES = {
+    0: 0,
+    1: 0.25,
+    2: 0.5,
+    3: 0.75,
+    4: 1
+}
 
 def curvture_drive_ik(speed: float, rotation: float) -> Tuple[float, float]:
     """Curvature drive inverse kinematics for a differential drive platform.
@@ -39,10 +43,5 @@ def arcade_drive_ik(speed: float, rotation: float) -> Tuple[float, float]:
     return mathutils.desaturate_wheel_speeds(left_speed, right_speed)
 
 
-def get_speed_multiplier(stick: Controllers.Joystick) -> float:
-    if stick.isPressed('MODEA'):
-        return MEDIUM_SPEED
-    elif stick.isPressed('MODEB'):
-        return MAX_SPEED
-    else:
-        return SLOW_SPEED
+def get_speed_multiplier(speed_mode: int) -> float:
+    return SPEED_MODES[speed_mode]

@@ -63,8 +63,8 @@ def joystick_motor_control():
             joystick_vertical = -joystick.axis('Y')
             joystick_horizontal = joystick.axis('X')
             ik_left, ik_right = arcade_drive_ik(joystick_vertical, joystick_horizontal)
-            ik_left *= get_speed_multiplier(joystick)
-            ik_right *= get_speed_multiplier(joystick)
+            ik_left *= get_speed_multiplier(couch_mode)
+            ik_right *= get_speed_multiplier(couch_mode)
 
             try:
                 left_rpm = left_motor.get_rpm()
