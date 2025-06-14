@@ -50,7 +50,7 @@ def joystick_motor_control():
     joystick = Controllers.Joystick()  # Initializes the joystick as a generic gamepad
     print("Gamepad connected")
 
-    pygame.mixer.init()
+    #pygame.mixer.init()
 
     joystick.startBackgroundUpdates()
 

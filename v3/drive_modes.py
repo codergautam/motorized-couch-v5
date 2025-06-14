@@ -3,8 +3,8 @@ from typing import Tuple
 import mathutils
 import Gamepad.Controllers as Controllers
 
-SLOW_SPEED = 0.3
-MEDIUM_SPEED = 0.5
+SLOW_SPEED = 1
+MEDIUM_SPEED = 1
 MAX_SPEED = 1
 
 def curvture_drive_ik(speed: float, rotation: float) -> Tuple[float, float]:
