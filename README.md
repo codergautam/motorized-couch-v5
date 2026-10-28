@@ -1,6 +1,6 @@
 # Moonshot Couch
 
-A gamepad-driven motorized couch (Stanford Student Space Initiative). This repo combines every version of the couch software with full commit history.
+A gamepad-driven motorized couch. This repo combines every version of the couch software with full commit history.
 
 | Folder | Version | Original repo |
 | --- | --- | --- |
