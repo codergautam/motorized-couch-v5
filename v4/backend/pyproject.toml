@@ -1,0 +1,14 @@
+[project]
+name = "motorized-couch-v4"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pygame>=2.6.1",
+    "pyserial>=3.5",
+    "pyvesc>=1.0.5",
+]
+
+[tool.uv.sources]
+pyvesc = { git = "https://github.com/LiamBindle/PyVESC" }
