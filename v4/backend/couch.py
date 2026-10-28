@@ -104,11 +104,11 @@ class Couch:
                 joystick_horizontal = joystick.axis('X')
                 
                 # Apply input smoothing to prevent oscillation from physical feedback
-                smooth_vertical, smooth_horizontal = self.input_smoother.smooth_inputs(
-                    joystick_vertical, joystick_horizontal
-                )
+                #smooth_vertical, smooth_horizontal = self.input_smoother.smooth_inputs(
+                #    joystick_vertical, joystick_horizontal
+                #)
                 
-                ik_left, ik_right = arcade_drive_ik(smooth_vertical, smooth_horizontal, self.rotation_sensitivity)
+                ik_left, ik_right = arcade_drive_ik(joystick_vertical, joystick_horizontal, self.rotation_sensitivity)
                 ik_left *= get_speed_multiplier(self.speed_mode)
                 ik_right *= get_speed_multiplier(self.speed_mode)
 
