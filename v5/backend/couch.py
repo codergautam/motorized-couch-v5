@@ -146,6 +146,9 @@ class Couch:
                 speed_mode_step = 1 if speed_mode_input > 0 else -1 if speed_mode_input < 0 else 0
                 if speed_mode_step and speed_mode_step != self.last_speed_mode_step:
                     index = SPEED_MODES.index(self.speed_mode) + speed_mode_step
+                    # Right past the last mode wraps around to park
+                    if index == len(SPEED_MODES):
+                        index = 0
                     if 0 <= index < len(SPEED_MODES):
                         mode = SPEED_MODES[index]
                         moving = max(self.fastest_wheel_mph, self.commanded_mph) > PARK_MAX_MPH
@@ -153,6 +156,9 @@ class Couch:
                             # Neutral lets the couch roll freely and park can only
                             # be reached through it, so brake first
                             print("Slow down before neutral")
+                        elif mode == "park" and speed_mode_step > 0 and moving:
+                            # One press too many in sport shouldn't slam on the brakes
+                            print("Slow down before parking")
                         elif mode == "park":
                             self.parking = True
                         else:
