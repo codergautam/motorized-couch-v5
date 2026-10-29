@@ -221,14 +221,15 @@ class ScreenUI:
     - Top-right: Mode indicator (N, Chill, Sport, Ludicrous)
     """
 
-    def __init__(self, root: tk.Tk) -> None:
+    def __init__(self, root: tk.Tk, fullscreen: bool = True) -> None:
         self.root = root
         self.root.title("Moonshot Couch")
-        try:
-            self.root.attributes("-fullscreen", True)
-        except Exception:
-            pass
         self.root.geometry("800x480")
+        if fullscreen:
+            # The Pi's window manager ignores fullscreen until the window is on
+            # screen, and without it the taskbar and title bar push the bottom of
+            # the dashboard off the screen
+            self.root.after(300, lambda: self.root.attributes("-fullscreen", True))
         self.root.configure(bg="white")
 
         # Layout constants

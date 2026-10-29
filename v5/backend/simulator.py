@@ -188,9 +188,9 @@ class TopDownView:
         if math.hypot(self.x - last_x, self.y - last_y) > 0.1:
             self.trail = self.trail[-200:] + [(self.x, self.y)]
 
-        # On the Pi's small screen this window is off the edge. Drawing it anyway
-        # keeps Tk busy, and the dashboard's updates queue up behind it.
-        if self.canvas.winfo_rootx() < self.canvas.winfo_screenwidth():
+        # Hidden on the Pi's small screen. Drawing it anyway keeps Tk busy, and
+        # the dashboard's updates queue up behind it.
+        if self.canvas.winfo_viewable():
             self.draw()
         self.canvas.after(20, self.tick)
 
@@ -274,11 +274,11 @@ class TopDownView:
 
 def main():
     root = tk.Tk()
-    ui = ScreenUI(root)
-    # ScreenUI fills the Pi's screen, which is the same size as the dashboard,
-    # so it stays fullscreen there. Anywhere else it's just a window.
-    if sys.platform != "linux":
-        root.attributes("-fullscreen", False)
+    # On a screen the size of the Pi's there's only room for the dashboard, so
+    # it fills the screen like on the couch and the top-down view is hidden
+    small_screen = root.winfo_screenwidth() <= 800
+    ui = ScreenUI(root, fullscreen=small_screen)
+    if not small_screen:
         root.geometry("800x480+20+20")
     root.title("Couch dashboard (simulated motors)")
 
@@ -292,6 +292,8 @@ def main():
     window.title("Couch simulator")
     window.geometry(f"{VIEW_WIDTH}x{VIEW_HEIGHT}+840+20")
     TopDownView(window, sim_couch, left, right)
+    if small_screen:
+        window.withdraw()  # still runs the simulated motors, just isn't drawn
 
     root.protocol("WM_DELETE_WINDOW", root.quit)
     window.protocol("WM_DELETE_WINDOW", root.quit)
