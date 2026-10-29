@@ -272,9 +272,11 @@ class TopDownView:
 def main():
     root = tk.Tk()
     ui = ScreenUI(root)
-    # ScreenUI fills the Pi's screen, here it's just a window
-    root.attributes("-fullscreen", False)
-    root.geometry("800x480+20+20")
+    # ScreenUI fills the Pi's screen, which is the same size as the dashboard,
+    # so it stays fullscreen there. Anywhere else it's just a window.
+    if sys.platform != "linux":
+        root.attributes("-fullscreen", False)
+        root.geometry("800x480+20+20")
     root.title("Couch dashboard (simulated motors)")
 
     left, right = SimMotor(), SimMotor()

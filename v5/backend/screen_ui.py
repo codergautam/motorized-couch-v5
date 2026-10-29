@@ -141,7 +141,7 @@ class DialWidget:
         if abs(delta) < 0.1:
             self._display_value = self._target_value
         else:
-            self._display_value += delta * 0.2
+            self._display_value += delta * 0.5
 
         extent = self._value_to_extent(self._display_value)
         self.canvas.itemconfig(self._value_arc, extent=extent)
@@ -156,7 +156,7 @@ class DialWidget:
         self.canvas.itemconfig(self._value_id, text=value_text)
 
         if abs(self._target_value - self._display_value) > 0.05:
-            self.root.after(32, self._tick)
+            self.root.after(16, self._tick)
         else:
             self._tick_running = False
 
@@ -282,7 +282,7 @@ class ScreenUI:
             accent=Colors.BLUE,
         )
 
-        # Gear (bottom center, under the speed dial): a big green or red block so
+        # Gear (bottom left, under the power dial): a big green or red block so
         # it reads at a glance, with the d-pad direction that picks it
         self.gear = tk.Label(
             root,
@@ -292,7 +292,7 @@ class ScreenUI:
             font=("Helvetica", 28, "bold"),
             width=10,
         )
-        self.gear.place(x=400, y=444, anchor="center")
+        self.gear.place(x=20, y=466, anchor="sw")
 
     def update(
         self, update: ScreenUIUpdate

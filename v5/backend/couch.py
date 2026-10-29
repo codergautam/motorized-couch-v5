@@ -15,6 +15,7 @@ from mathutils import InputSmoother
 from screen_ui import ScreenUI, ScreenUIUpdate
 
 POLL_INTERVAL = 0.05  # 20Hz polling for more responsive input reading
+UI_INTERVAL = 0.05  # dashboard refresh, slower makes mode and gear changes show up late
 
 # Fraction of full speed lost per second after letting go of the gas (about 2 s
 # from full speed to stopped), and with the brake pulled all the way
@@ -119,7 +120,7 @@ class Couch:
                     ))
             except Exception as e:
                 print(f"Error sending data to UI: {e}")
-            time.sleep(0.2)
+            time.sleep(UI_INTERVAL)
 
     def joystick_motor_control(self):
         stop_event = self.stop_event
