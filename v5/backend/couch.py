@@ -1,3 +1,4 @@
+import math
 import time
 import threading
 
@@ -33,6 +34,20 @@ WHEEL_PULLEY = 72
 
 # Pressing park any faster than this brakes to a stop first instead of stopping the wheels dead
 PARK_MAX_MPH = 2.0
+
+
+# The VESC speed controller ignores commands below its "Minimum ERPM" (Motor
+# Settings > PID Controllers > Speed Controller in VESC Tool, 900 by default),
+# so the wheels didn't move until the gas ramp got past it. Match it to the VESCs.
+MIN_ERPM = 900
+
+
+def above_min_erpm(wheel_speed: float) -> float:
+    """Raises any nonzero wheel speed [-1.0..1.0] to at least MIN_ERPM, so the
+    wheels start turning as soon as the gas is pressed."""
+    if wheel_speed == 0:
+        return 0.0
+    return math.copysign(max(abs(wheel_speed), MIN_ERPM / VESCMotorController.MAX_RPM), wheel_speed)
 
 
 def erpm_to_mph(erpm: float) -> float:
@@ -219,6 +234,7 @@ class Couch:
                     speed_multiplier = min(speed_multiplier, get_speed_multiplier(REVERSE_SPEED_MODE))
                 ik_left *= speed_multiplier
                 ik_right *= speed_multiplier
+                ik_left, ik_right = above_min_erpm(ik_left), above_min_erpm(ik_right)
 
                 try:
                     measurements_left = left_motor.get_measurements()

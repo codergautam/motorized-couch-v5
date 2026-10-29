@@ -56,6 +56,9 @@ def get_speed_multiplier(speed_mode: SpeedMode) -> float:
     return SPEED_MODES_TO_MULTIPLIER[speed_mode]
 
 
+START_SPEED = 0.08  # just above the 0.05 (+0.02 hysteresis) deadband in arcade_drive_ik
+
+
 class RacingThrottle:
     """Turns the gas and brake triggers into a speed [0.0..1.0] like a racing game:
     speed builds up towards the gas, eases off when you let go of it, and
@@ -75,7 +78,9 @@ class RacingThrottle:
 
         target = 0.0 if brake > 0 else gas
         if target >= self.speed:
-            self.speed = min(target, self.speed + self.accel_rate * dt)
+            # Start the ramp just past arcade_drive_ik's deadband, otherwise the
+            # first moments of pressing the gas do nothing
+            self.speed = min(target, max(self.speed, START_SPEED) + self.accel_rate * dt)
         else:
             rate = self.coast_rate + brake * (self.brake_rate - self.coast_rate)
             self.speed = max(target, self.speed - rate * dt)
