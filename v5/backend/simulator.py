@@ -186,9 +186,12 @@ class TopDownView:
         self.y += self.speed * math.sin(self.heading) * dt
         last_x, last_y = self.trail[-1]
         if math.hypot(self.x - last_x, self.y - last_y) > 0.1:
-            self.trail = self.trail[-600:] + [(self.x, self.y)]
+            self.trail = self.trail[-200:] + [(self.x, self.y)]
 
-        self.draw()
+        # On the Pi's small screen this window is off the edge. Drawing it anyway
+        # keeps Tk busy, and the dashboard's updates queue up behind it.
+        if self.canvas.winfo_rootx() < self.canvas.winfo_screenwidth():
+            self.draw()
         self.canvas.after(20, self.tick)
 
     def to_screen(self, x: float, y: float):
