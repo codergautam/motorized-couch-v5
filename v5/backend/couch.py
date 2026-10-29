@@ -2,9 +2,10 @@ import time
 import threading
 
 from detect_motor_controllers import get_motor_controllers
+from motor_controller import VESCMotorController
 from joystick import JoystickAdapter, code
 from joystick_config import (
-    JOYSTICK_NAME, GAS_AXIS, BRAKE_AXIS, STEERING_AXIS, AXIS_CALIBRATION, GEAR_BUTTONS, SPEED_MODE_BUTTONS, HORN_BUTTONS
+    JOYSTICK_NAME, GAS_AXIS, BRAKE_AXIS, STEERING_AXIS, AXIS_CALIBRATION, GEAR_AXIS, SPEED_MODE_BUTTONS, HORN_BUTTONS
 )
 
 from battery import voltage_to_percentage
@@ -25,6 +26,15 @@ IPM_IN_MPH = 1056
 POLE_PAIRS = 6
 MOTOR_PULLEY = 16
 WHEEL_PULLEY = 72
+
+# Pressing park any faster than this brakes to a stop first instead of stopping the wheels dead
+PARK_MAX_MPH = 2.0
+
+
+def erpm_to_mph(erpm: float) -> float:
+    motor_rpm = erpm / POLE_PAIRS
+    wheel_rpm = motor_rpm * (MOTOR_PULLEY / WHEEL_PULLEY)
+    return wheel_rpm * 8 * 3.14 / IPM_IN_MPH
 
 class Couch:
     def __init__(self, ui_manager: "ScreenUI | None" = None):
@@ -54,7 +64,7 @@ class Couch:
         self.gas_axis = code(GAS_AXIS)
         self.brake_axis = code(BRAKE_AXIS)
         self.steering_axis = code(STEERING_AXIS)
-        self.gear_buttons = [code(button) for button in GEAR_BUTTONS]
+        self.gear_axis = code(GEAR_AXIS)
         self.speed_mode_buttons = [
             (mode, [code(button) for button in buttons]) for mode, buttons in SPEED_MODE_BUTTONS.items()
         ]
@@ -62,7 +72,11 @@ class Couch:
 
         self.throttle = RacingThrottle(COAST_RATE, BRAKE_RATE)
         self.gear: Gear = "drive"
-        self.gear_was_pressed = False
+        self.last_gear_request: "Gear | None" = None
+        # Park was pressed (or the joystick lost) while moving, so braking before parking
+        self.parking = False
+        self.fastest_wheel_mph = 0.0
+        self.commanded_mph = 0.0
         # The couch won't drive until the gas is released and the stick centered
         # in a drive mode, so leaving park or reconnecting with either held doesn't lurch
         self.armed = False
@@ -122,19 +136,36 @@ class Couch:
                 joystick = self.joystick.state()
 
                 if not joystick.connected:
-                    # Lost the joystick, so brake, go back to drive and make the driver pick a mode again
-                    self.speed_mode = "park"
-                    self.gear = "drive"
+                    # Lost the joystick, so brake to a stop, park, go back to drive
+                    # and make the driver pick a mode again
+                    if self.speed_mode != "park":
+                        self.parking = True
                 else:
                     for mode, buttons in self.speed_mode_buttons:
                         if joystick.any_pressed(buttons):
-                            self.speed_mode = mode
+                            if mode == "park" and self.speed_mode != "park":
+                                self.parking = True
+                            else:
+                                self.speed_mode = mode
+                                self.parking = False
                             break
 
                 # Normalized and calibrated by the adapter: triggers [0..1], steering right is positive
                 gas = joystick.axis(self.gas_axis)
                 brake = joystick.axis(self.brake_axis)
                 steering = joystick.axis(self.steering_axis)
+
+                # Parking at speed would stop the wheels dead, so above
+                # PARK_MAX_MPH it brakes as hard as the brake trigger first. The
+                # speed sent to the motors counts too, in case the measured one is wrong.
+                if self.parking:
+                    if max(self.fastest_wheel_mph, self.commanded_mph) > PARK_MAX_MPH:
+                        gas, brake = 0, 1
+                    else:
+                        self.speed_mode = "park"
+                        self.parking = False
+                        if not joystick.connected:
+                            self.gear = "drive"
 
                 if self.speed_mode in ("park", "neutral"):
                     self.armed = False
@@ -146,14 +177,16 @@ class Couch:
 
                 speed = self.throttle.update(gas, brake)
 
-                # Shift once per press, and only while the couch isn't being driven
-                gear_pressed = joystick.any_pressed(self.gear_buttons)
-                if gear_pressed and not self.gear_was_pressed:
+                # D-pad up is drive, down is reverse. Shift once per press, and
+                # only while the couch isn't being driven
+                gear_input = joystick.axis(self.gear_axis)
+                gear_request: "Gear | None" = "drive" if gear_input > 0 else "reverse" if gear_input < 0 else None
+                if gear_request and gear_request != self.last_gear_request and gear_request != self.gear:
                     if speed == 0 and steering == 0:
-                        self.gear = "reverse" if self.gear == "drive" else "drive"
+                        self.gear = gear_request
                     else:
                         print("Stop before shifting gear")
-                self.gear_was_pressed = gear_pressed
+                self.last_gear_request = gear_request
 
                 # Apply input smoothing to prevent oscillation from physical feedback
                 #smooth_speed, smooth_steering = self.input_smoother.smooth_inputs(speed, steering)
@@ -187,12 +220,10 @@ class Couch:
                     self.left_rpm = 0
                     self.right_rpm = 0
 
-                avg_erpm = (self.left_rpm + self.right_rpm) / 2
-                motor_rpm = avg_erpm / POLE_PAIRS
-                wheel_rpm = motor_rpm * (MOTOR_PULLEY / WHEEL_PULLEY)
-                wheel_mph = wheel_rpm * 8 * 3.14 / IPM_IN_MPH
-
-                self.speed = wheel_mph
+                self.speed = erpm_to_mph((self.left_rpm + self.right_rpm) / 2)
+                # Spinning in place averages out to 0 mph, so parking checks the fastest wheel
+                self.fastest_wheel_mph = erpm_to_mph(max(abs(self.left_rpm), abs(self.right_rpm)))
+                self.commanded_mph = erpm_to_mph(max(abs(ik_left), abs(ik_right)) * VESCMotorController.MAX_RPM)
 
                 if self.speed_mode == "neutral":
                     left_motor.set_current(0)

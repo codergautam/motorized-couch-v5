@@ -26,15 +26,18 @@ STEERING_AXIS = "ABS_RX"  # right stick
 STICK_DEADZONE = 0.15
 TRIGGER_DEADZONE = 0.05
 
+# D-pad up picks drive and down picks reverse, only while the couch isn't
+# moving. The F310 reports its d-pad as an axis that's -1 up and +1 down.
+GEAR_AXIS = "ABS_HAT0Y"
+
 AXIS_CALIBRATION: Dict[str, AxisCalibration] = {
     # Triggers rest at their minimum, so centering them there reads 0 released and 1 pulled
     GAS_AXIS: AxisCalibration(center=0, deadzone=TRIGGER_DEADZONE),
     BRAKE_AXIS: AxisCalibration(center=0, deadzone=TRIGGER_DEADZONE),
     STEERING_AXIS: AxisCalibration(deadzone=STICK_DEADZONE),
+    # Inverted so up reads +1
+    GEAR_AXIS: AxisCalibration(invert=True, deadzone=0.5),
 }
-
-# Switches between drive and reverse, only while the couch isn't moving
-GEAR_BUTTONS: List[str] = ["BTN_TR"]  # right bumper, like a paddle shifter
 
 # Checked top to bottom, the first mode with a pressed button wins, so park
 # beats everything.

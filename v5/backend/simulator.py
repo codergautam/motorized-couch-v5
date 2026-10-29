@@ -21,6 +21,7 @@ if sys.platform == "win32":
     # uses it for event codes. These are the gamepad ones from linux/input-event-codes.h.
     GAMEPAD_CODES = {
         "ABS_X": 0x00, "ABS_Y": 0x01, "ABS_Z": 0x02, "ABS_RX": 0x03, "ABS_RY": 0x04, "ABS_RZ": 0x05,
+        "ABS_HAT0X": 0x10, "ABS_HAT0Y": 0x11,
         "BTN_A": 0x130, "BTN_SOUTH": 0x130, "BTN_B": 0x131, "BTN_EAST": 0x131,
         "BTN_X": 0x133, "BTN_NORTH": 0x133, "BTN_Y": 0x134, "BTN_WEST": 0x134,
         "BTN_TL": 0x136, "BTN_TR": 0x137, "BTN_SELECT": 0x13a, "BTN_START": 0x13b,
@@ -92,6 +93,7 @@ class XInputJoystick:
 
     STICK = types.SimpleNamespace(min=-32768, max=32767, flat=128)
     TRIGGER = types.SimpleNamespace(min=0, max=255, flat=0)
+    HAT = types.SimpleNamespace(min=-1, max=1, flat=0)
     BUTTONS = {
         0x1000: "BTN_A", 0x2000: "BTN_B", 0x4000: "BTN_X", 0x8000: "BTN_Y", 0x0100: "BTN_TL", 0x0200: "BTN_TR",
         0x0010: "BTN_START", 0x0020: "BTN_SELECT", 0x0040: "BTN_THUMBL", 0x0080: "BTN_THUMBR",
@@ -118,10 +120,18 @@ class XInputJoystick:
             code("ABS_X"): pad.sThumbLX, code("ABS_Y"): ~pad.sThumbLY,
             code("ABS_RX"): pad.sThumbRX, code("ABS_RY"): ~pad.sThumbRY,
             code("ABS_Z"): pad.bLeftTrigger, code("ABS_RZ"): pad.bRightTrigger,
+            # The d-pad is buttons in XInput but an axis on Linux, -1 left/up and +1 right/down
+            code("ABS_HAT0X"): bool(pad.wButtons & 0x0008) - bool(pad.wButtons & 0x0004),
+            code("ABS_HAT0Y"): bool(pad.wButtons & 0x0002) - bool(pad.wButtons & 0x0001),
         }
         triggers = (code("ABS_Z"), code("ABS_RZ"))
+        hats = (code("ABS_HAT0X"), code("ABS_HAT0Y"))
+
+        def info(axis: int):
+            return self.TRIGGER if axis in triggers else self.HAT if axis in hats else self.STICK
+
         axes = {
-            axis: normalize(value, self.TRIGGER if axis in triggers else self.STICK, self.calibration.get(axis, AxisCalibration()))
+            axis: normalize(value, info(axis), self.calibration.get(axis, AxisCalibration()))
             for axis, value in raw.items()
         }
         pressed = frozenset(button for bit, button in self.buttons.items() if pad.wButtons & bit)
@@ -236,7 +246,9 @@ class TopDownView:
 
         mode = self.couch.speed_mode
         lines = [f"{mode.upper()}   {self.couch.gear.upper()}"]
-        if mode in ("park", "neutral"):
+        if self.couch.parking:
+            lines.append("Braking to a stop, then parking")
+        elif mode in ("park", "neutral"):
             lines.append("Pick a drive mode: A chill, X standard, Start sport")
         elif not self.couch.armed:
             lines.append("Let go of the gas and center the stick to drive")

@@ -15,8 +15,8 @@ Set up for a Logitech F310 gamepad, driven like a racing game. **Put the switch 
 | RT | gas, deeper is faster |
 | LT | brake, letting go of the gas without it slows down gently |
 | right stick | steer |
-| RB | shift drive / reverse, only while stopped. Reverse is capped at chill speed |
-| B | park |
+| d-pad up / down | shift to drive / reverse, only while stopped. Reverse is capped at chill speed |
+| B | park. Above 2 mph it brakes to a stop first |
 | Y | neutral |
 | A | chill |
 | X | standard |
@@ -31,7 +31,7 @@ Any other USB joystick or gamepad works too, it's read straight from Linux evdev
 
 If the probe lists no devices, the user isn't allowed to read them: `sudo usermod -aG input $USER`, then log in again.
 
-The couch won't drive until the gas is released and the stick centered after picking a drive mode, and if the joystick is unplugged it brakes, goes to park and shifts back to drive.
+The couch won't drive until the gas is released and the stick centered after picking a drive mode, and if the joystick is unplugged it brakes to a stop, goes to park and shifts back to drive.
 
 ## simulator
 
