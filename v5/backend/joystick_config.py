@@ -10,7 +10,6 @@ to see the names it uses, then put them here.
 """
 from typing import Dict, List, Optional
 
-from drive_modes import SpeedMode
 from joystick import AxisCalibration
 
 # Part of the device name. None uses the first joystick or gamepad found.
@@ -26,9 +25,13 @@ STEERING_AXIS = "ABS_RX"  # right stick
 STICK_DEADZONE = 0.15
 TRIGGER_DEADZONE = 0.05
 
-# D-pad up picks drive and down picks reverse, only while the couch isn't
-# moving. The F310 reports its d-pad as an axis that's -1 up and +1 down.
+# Everything but driving is on the d-pad, the face buttons do nothing. The F310
+# reports its d-pad as two axes, -1 up / left and +1 down / right.
+# Up picks drive and down picks reverse, only while the couch isn't moving.
 GEAR_AXIS = "ABS_HAT0Y"
+# Left and right step through park, neutral, chill, standard and sport, the
+# same order as on the screen
+SPEED_MODE_AXIS = "ABS_HAT0X"
 
 AXIS_CALIBRATION: Dict[str, AxisCalibration] = {
     # Triggers rest at their minimum, so centering them there reads 0 released and 1 pulled
@@ -37,16 +40,7 @@ AXIS_CALIBRATION: Dict[str, AxisCalibration] = {
     STEERING_AXIS: AxisCalibration(deadzone=STICK_DEADZONE),
     # Inverted so up reads +1
     GEAR_AXIS: AxisCalibration(invert=True, deadzone=0.5),
-}
-
-# Checked top to bottom, the first mode with a pressed button wins, so park
-# beats everything.
-SPEED_MODE_BUTTONS: Dict[SpeedMode, List[str]] = {
-    "park": ["BTN_B"],  # red, like park on the screen
-    "neutral": ["BTN_Y"],  # yellow, like neutral on the screen
-    "chill": ["BTN_A"],
-    "standard": ["BTN_X"],
-    "sport": ["BTN_START"],  # out of the way, so it's never pressed by accident
+    SPEED_MODE_AXIS: AxisCalibration(deadzone=0.5),
 }
 
 HORN_BUTTONS: List[str] = ["BTN_TL"]  # left bumper

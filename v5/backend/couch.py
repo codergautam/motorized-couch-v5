@@ -5,11 +5,11 @@ from detect_motor_controllers import get_motor_controllers
 from motor_controller import VESCMotorController
 from joystick import JoystickAdapter, code
 from joystick_config import (
-    JOYSTICK_NAME, GAS_AXIS, BRAKE_AXIS, STEERING_AXIS, AXIS_CALIBRATION, GEAR_AXIS, SPEED_MODE_BUTTONS, HORN_BUTTONS
+    JOYSTICK_NAME, GAS_AXIS, BRAKE_AXIS, STEERING_AXIS, AXIS_CALIBRATION, GEAR_AXIS, SPEED_MODE_AXIS, HORN_BUTTONS
 )
 
 from battery import voltage_to_percentage
-from drive_modes import Gear, RacingThrottle, SpeedMode, arcade_drive_ik, get_speed_multiplier
+from drive_modes import SPEED_MODES, Gear, RacingThrottle, SpeedMode, arcade_drive_ik, get_speed_multiplier
 from mathutils import InputSmoother
 
 from screen_ui import ScreenUI, ScreenUIUpdate
@@ -65,9 +65,8 @@ class Couch:
         self.brake_axis = code(BRAKE_AXIS)
         self.steering_axis = code(STEERING_AXIS)
         self.gear_axis = code(GEAR_AXIS)
-        self.speed_mode_buttons = [
-            (mode, [code(button) for button in buttons]) for mode, buttons in SPEED_MODE_BUTTONS.items()
-        ]
+        self.speed_mode_axis = code(SPEED_MODE_AXIS)
+        self.last_speed_mode_step = 0
         self.horn_buttons = [code(button) for button in HORN_BUTTONS]
 
         self.throttle = RacingThrottle(COAST_RATE, BRAKE_RATE)
@@ -140,15 +139,25 @@ class Couch:
                     # and make the driver pick a mode again
                     if self.speed_mode != "park":
                         self.parking = True
-                else:
-                    for mode, buttons in self.speed_mode_buttons:
-                        if joystick.any_pressed(buttons):
-                            if mode == "park" and self.speed_mode != "park":
-                                self.parking = True
-                            else:
-                                self.speed_mode = mode
-                                self.parking = False
-                            break
+
+                # D-pad left and right step one mode down or up per press
+                speed_mode_input = joystick.axis(self.speed_mode_axis)
+                speed_mode_step = 1 if speed_mode_input > 0 else -1 if speed_mode_input < 0 else 0
+                if speed_mode_step and speed_mode_step != self.last_speed_mode_step:
+                    index = SPEED_MODES.index(self.speed_mode) + speed_mode_step
+                    if 0 <= index < len(SPEED_MODES):
+                        mode = SPEED_MODES[index]
+                        moving = max(self.fastest_wheel_mph, self.commanded_mph) > PARK_MAX_MPH
+                        if mode == "neutral" and speed_mode_step < 0 and moving:
+                            # Neutral lets the couch roll freely and park can only
+                            # be reached through it, so brake first
+                            print("Slow down before neutral")
+                        elif mode == "park":
+                            self.parking = True
+                        else:
+                            self.speed_mode = mode
+                            self.parking = False
+                self.last_speed_mode_step = speed_mode_step
 
                 # Normalized and calibrated by the adapter: triggers [0..1], steering right is positive
                 gas = joystick.axis(self.gas_axis)

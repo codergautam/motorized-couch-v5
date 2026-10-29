@@ -16,12 +16,10 @@ Set up for a Logitech F310 gamepad, driven like a racing game. **Put the switch 
 | LT | brake, letting go of the gas without it slows down gently |
 | right stick | steer |
 | d-pad up / down | shift to drive / reverse, only while stopped. Reverse is capped at chill speed |
-| B | park. Above 2 mph it brakes to a stop first |
-| Y | neutral |
-| A | chill |
-| X | standard |
-| Start | sport |
+| d-pad left / right | step through park, neutral, chill, standard, sport, like on the screen. Above 2 mph it won't drop into neutral, brake first |
 | LB | horn (TODO) |
+
+The face buttons (A, B, X, Y) and Start do nothing.
 
 Any other USB joystick or gamepad works too, it's read straight from Linux evdev (`joystick.py`). To set up a new one:
 

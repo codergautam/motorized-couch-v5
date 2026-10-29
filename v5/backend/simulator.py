@@ -249,7 +249,7 @@ class TopDownView:
         if self.couch.parking:
             lines.append("Braking to a stop, then parking")
         elif mode in ("park", "neutral"):
-            lines.append("Pick a drive mode: A chill, X standard, Start sport")
+            lines.append("Press right on the d-pad to pick a drive mode")
         elif not self.couch.armed:
             lines.append("Let go of the gas and center the stick to drive")
         else:
