@@ -17,7 +17,7 @@ JOYSTICK_NAME: Optional[str] = "F310"
 
 GAS_AXIS = "ABS_RZ"  # right trigger
 BRAKE_AXIS = "ABS_Z"  # left trigger
-STEERING_AXIS = "ABS_RX"  # right stick
+STEERING_AXIS = "ABS_X"  # left stick
 
 # Thumbsticks rarely rest exactly centered and the F310 barely reports a
 # deadzone of its own. If the probe shows the stick off +0.00 when you let go,
