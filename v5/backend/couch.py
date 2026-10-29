@@ -17,6 +17,9 @@ from screen_ui import ScreenUI, ScreenUIUpdate
 POLL_INTERVAL = 0.05  # 20Hz polling for more responsive input reading
 UI_INTERVAL = 0.05  # dashboard refresh, slower makes mode and gear changes show up late
 
+# Fraction of full speed gained per second at most, so flooring the gas takes
+# about 3 s to reach full speed instead of taking off. Lower is gentler.
+ACCEL_RATE = 0.35
 # Fraction of full speed lost per second after letting go of the gas (about 2 s
 # from full speed to stopped), and with the brake pulled all the way
 COAST_RATE = 0.5
@@ -70,7 +73,7 @@ class Couch:
         self.last_speed_mode_step = 0
         self.horn_buttons = [code(button) for button in HORN_BUTTONS]
 
-        self.throttle = RacingThrottle(COAST_RATE, BRAKE_RATE)
+        self.throttle = RacingThrottle(ACCEL_RATE, COAST_RATE, BRAKE_RATE)
         self.gear: Gear = "drive"
         self.last_gear_request: "Gear | None" = None
         # Park was pressed (or the joystick lost) while moving, so braking before parking

@@ -11,7 +11,7 @@ SPEED_MODES: List[SpeedMode] = ["park", "neutral", "chill", "standard", "sport"]
 SPEED_MODES_TO_MULTIPLIER: Dict[SpeedMode, float] = {
     "park": 0,
     "neutral": 0,
-    "chill": 0.5,
+    "chill": 0.17,  # about 3 mph, full speed is about 17.6 mph
     "standard": 0.75,
     "sport": 1,
 }
@@ -58,10 +58,11 @@ def get_speed_multiplier(speed_mode: SpeedMode) -> float:
 
 class RacingThrottle:
     """Turns the gas and brake triggers into a speed [0.0..1.0] like a racing game:
-    speed follows the gas straight away, eases off when you let go of it, and
+    speed builds up towards the gas, eases off when you let go of it, and
     drops faster the harder you brake. Brake beats gas."""
 
-    def __init__(self, coast_rate: float, brake_rate: float):
+    def __init__(self, accel_rate: float, coast_rate: float, brake_rate: float):
+        self.accel_rate = accel_rate  # speed gained per second, at most
         self.coast_rate = coast_rate  # speed lost per second with no gas
         self.brake_rate = brake_rate  # speed lost per second with the brake pulled all the way
         self.speed = 0.0
@@ -74,7 +75,7 @@ class RacingThrottle:
 
         target = 0.0 if brake > 0 else gas
         if target >= self.speed:
-            self.speed = target
+            self.speed = min(target, self.speed + self.accel_rate * dt)
         else:
             rate = self.coast_rate + brake * (self.brake_rate - self.coast_rate)
             self.speed = max(target, self.speed - rate * dt)
