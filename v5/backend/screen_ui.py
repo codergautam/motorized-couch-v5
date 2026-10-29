@@ -282,16 +282,17 @@ class ScreenUI:
             accent=Colors.BLUE,
         )
 
-        # Gear (bottom center, under the speed dial), red while in reverse
+        # Gear (bottom center, under the speed dial): a big green or red block so
+        # it reads at a glance, with the d-pad direction that picks it
         self.gear = tk.Label(
             root,
-            text="Drive",
-            bg=self.bg,
+            text="▲ DRIVE",
+            bg=Colors.GREEN,
             fg=Colors.BLACK,
-            font=("Helvetica", 20, "bold"),
-            padx=16,
+            font=("Helvetica", 28, "bold"),
+            width=10,
         )
-        self.gear.place(x=400, y=440, anchor="center")
+        self.gear.place(x=400, y=444, anchor="center")
 
     def update(
         self, update: ScreenUIUpdate
@@ -306,9 +307,9 @@ class ScreenUI:
         self.dial_battery.set_target(battery_pct)
         self.mode.set_mode(update.speed_mode)
         if update.gear == "reverse":
-            self.gear.config(text="Reverse", bg=Colors.RED, fg="white")
+            self.gear.config(text="▼ REVERSE", bg=Colors.RED, fg="white")
         else:
-            self.gear.config(text="Drive", bg=self.bg, fg=Colors.BLACK)
+            self.gear.config(text="▲ DRIVE", bg=Colors.GREEN, fg=Colors.BLACK)
 
 
 if __name__ == "__main__":
