@@ -6,6 +6,37 @@
 2. Install uv: https://docs.astral.sh/uv/getting-started/installation/#standalone-installer
 3. run `uv run main.py`
 
+## joystick
+
+Set up for a Logitech F310 gamepad, driven like a racing game. **Put the switch on the back on X**, on D the couch ignores it.
+
+| control | does |
+| --- | --- |
+| RT | gas, deeper is faster |
+| LT | brake, letting go of the gas without it slows down gently |
+| right stick | steer |
+| RB | shift drive / reverse, only while stopped. Reverse is capped at chill speed |
+| B | park |
+| Y | neutral |
+| A | chill |
+| X | standard |
+| Start | sport |
+| LB | horn (TODO) |
+
+Any other USB joystick or gamepad works too, it's read straight from Linux evdev (`joystick.py`). To set up a new one:
+
+1. plug it in and run `uv run joystick_probe.py`
+2. wiggle the stick and mash buttons, it prints the names the couch sees (`ABS_Y`, `BTN_THUMB`, ...)
+3. put those names in `joystick_config.py`
+
+If the probe lists no devices, the user isn't allowed to read them: `sudo usermod -aG input $USER`, then log in again.
+
+The couch won't drive until the gas is released and the stick centered after picking a drive mode, and if the joystick is unplugged it brakes, goes to park and shifts back to drive.
+
+## simulator
+
+Try the controls without risking anyone: `uv run simulator.py`. It runs the real control loop and dashboard with simulated motors, and a second window shows where the couch would go from above and exactly what each motor would be told. Works on a Windows laptop (F310 switch on X) and on the Pi, where it reads the joystick exactly like the couch does, so it's a dress rehearsal with the motors left out.
+
 ## other materials
 
 - odrive installation guide: https://docs.odriverobotics.com/v/latest/interfaces/odrivetool.html

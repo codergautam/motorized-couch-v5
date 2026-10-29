@@ -1,10 +1,11 @@
 [project]
-name = "motorized-couch-v4"
+name = "motorized-couch-v5"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "evdev>=1.7; sys_platform == 'linux'",
     "pygame>=2.6.1",
     "pyserial>=3.5",
     "pyvesc>=1.0.5",

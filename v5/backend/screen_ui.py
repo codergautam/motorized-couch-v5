@@ -1,7 +1,7 @@
 import tkinter as tk
 from typing import Tuple, Dict
 from dataclasses import dataclass
-from drive_modes import SpeedMode, SPEED_MODES
+from drive_modes import Gear, SpeedMode, SPEED_MODES
 
 class Colors:
     RED = "#FF0060"
@@ -19,6 +19,7 @@ class ScreenUIUpdate:
     power_watts: float
     battery_pct: float
     speed_mode: "SpeedMode"
+    gear: "Gear"
 
 class DialWidget:
     """
@@ -281,11 +282,22 @@ class ScreenUI:
             accent=Colors.BLUE,
         )
 
+        # Gear (bottom center, under the speed dial), red while in reverse
+        self.gear = tk.Label(
+            root,
+            text="Drive",
+            bg=self.bg,
+            fg=Colors.BLACK,
+            font=("Helvetica", 20, "bold"),
+            padx=16,
+        )
+        self.gear.place(x=400, y=440, anchor="center")
+
     def update(
         self, update: ScreenUIUpdate
     ) -> None:
         # Clamp incoming values and update targets
-        speed_mph = max(0.0, min(25.0, float(update.speed_mph)))
+        speed_mph = max(0.0, min(25.0, abs(float(update.speed_mph))))  # negative in reverse
         power_watts = max(0.0, min(1200.0, float(update.power_watts)))
         battery_pct = max(0.0, min(100.0, float(update.battery_pct)))
 
@@ -293,6 +305,10 @@ class ScreenUI:
         self.dial_power.set_target(power_watts)
         self.dial_battery.set_target(battery_pct)
         self.mode.set_mode(update.speed_mode)
+        if update.gear == "reverse":
+            self.gear.config(text="Reverse", bg=Colors.RED, fg="white")
+        else:
+            self.gear.config(text="Drive", bg=self.bg, fg=Colors.BLACK)
 
 
 if __name__ == "__main__":
@@ -305,6 +321,7 @@ if __name__ == "__main__":
             power_watts=(v * 50) % 1200,
             battery_pct=100 - (v % 100),
             speed_mode=SPEED_MODES[int(v) % len(SPEED_MODES)],
+            gear="reverse" if int(v) % 20 >= 10 else "drive",
         ))
         root.after(100, lambda: demo_tick(v + 1))
 

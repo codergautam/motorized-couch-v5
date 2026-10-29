@@ -1,7 +1,10 @@
 from typing import Tuple, Literal, Dict, List
+import time
 import mathutils
 
 SpeedMode = Literal["park", "neutral", "chill", "standard", "sport"]
+
+Gear = Literal["drive", "reverse"]
 
 SPEED_MODES: List[SpeedMode] = ["park", "neutral", "chill", "standard", "sport"]
 
@@ -51,3 +54,31 @@ def arcade_drive_ik(speed: float, rotation: float, rotation_sensitivity: float =
 
 def get_speed_multiplier(speed_mode: SpeedMode) -> float:
     return SPEED_MODES_TO_MULTIPLIER[speed_mode]
+
+
+class RacingThrottle:
+    """Turns the gas and brake triggers into a speed [0.0..1.0] like a racing game:
+    speed follows the gas straight away, eases off when you let go of it, and
+    drops faster the harder you brake. Brake beats gas."""
+
+    def __init__(self, coast_rate: float, brake_rate: float):
+        self.coast_rate = coast_rate  # speed lost per second with no gas
+        self.brake_rate = brake_rate  # speed lost per second with the brake pulled all the way
+        self.speed = 0.0
+        self.last_time = time.monotonic()
+
+    def update(self, gas: float, brake: float) -> float:
+        now = time.monotonic()
+        dt = now - self.last_time
+        self.last_time = now
+
+        target = 0.0 if brake > 0 else gas
+        if target >= self.speed:
+            self.speed = target
+        else:
+            rate = self.coast_rate + brake * (self.brake_rate - self.coast_rate)
+            self.speed = max(target, self.speed - rate * dt)
+        return self.speed
+
+    def reset(self):
+        self.speed = 0.0
