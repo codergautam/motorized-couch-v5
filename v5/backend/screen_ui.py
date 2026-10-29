@@ -291,7 +291,7 @@ class ScreenUI:
             bg=Colors.GREEN,
             fg=Colors.BLACK,
             font=("Helvetica", 28, "bold"),
-            width=10,
+            width=12,
         )
         self.gear.place(x=20, y=466, anchor="sw")
 
